@@ -8,6 +8,7 @@ import express,{Request,Response,NextFunction,Errback} from "express";
 export const app = express()
 import cors from 'cors'
 import cookieParser from "cookie-parser"
+import { ErrorMiddleware } from "./middleware/error";
 
 
 // body parser
@@ -45,3 +46,6 @@ app.use(function onError(err:Errback, req:Request, res:Response, next:NextFuncti
     res.statusCode = 500;
     // res.end(res.sentry + "\n");
   });
+
+
+  app.use(ErrorMiddleware);
