@@ -1,8 +1,7 @@
-import mongoose, { Document, Model, Schema } from "mongoose"
-import bcrypt from 'bcryptjs'
+import mongoose, { Document, Model, Schema } from "mongoose";
+import bcrypt from 'bcryptjs';
 
-
-const emailRegexPattern: RegExp = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+const emailRegexPattern: RegExp = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
 export interface IUser extends Document {
     name: string;
@@ -10,48 +9,45 @@ export interface IUser extends Document {
     password: string;
     avatar: {
         public_id: string;
-        url: string
+        url: string;
     };
-    role: {
-        type: string;
-        isVerified: boolean;
-        courses: Array<{ courseId: string }>;
-        comparePassword: (password: string) => Promise<boolean>;
-
-
-    }
-
-
+    role: string;
+    isVerified: boolean;
+    courses: Array<{ courseId: string }>;
+    comparePassword: (password: string) => Promise<boolean>;
 }
 
 const userSchema: Schema<IUser> = new mongoose.Schema({
-
     name: {
         type: String,
-        required: [true, 'kindly enter a name']
+        required: [true, 'Kindly enter a name']
     },
     email: {
         type: String,
-        required: [true, 'please enter your email'],
+        required: [true, 'Please enter your email'],
         validate: {
             validator: function (value: string) {
-                return emailRegexPattern.test(value)
+                return emailRegexPattern.test(value);
             },
-            message: 'please enter a valid email'
+            message: 'Please enter a valid email'
         },
         unique: true,
-
     },
     password: {
         type: String,
-        required: [true, "please enter your password"],
-        minLength: [8, "password must be at least 6 characters"],
+        required: [true, "Please enter your password"],
+        minLength: [8, "Password must be at least 8 characters"],
         select: false,
-
     },
     avatar: {
-        public_id: String,
-        url: String,
+        public_id: {
+            type: String,
+            default: ''
+        },
+        url: {
+            type: String,
+            default: ''
+        },
     },
     role: {
         type: String,
@@ -63,32 +59,30 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
     },
     courses: [
         {
-            courseId: String,
+            courseId: {
+                type: String,
+                required: true
+            },
         }
     ],
+}, {
+    timestamps: true
+});
 
-
-},
-    {
-        timestamps: true
-    });
-
-
-// hash passkey
-
+// Hash password before saving
 userSchema.pre<IUser>('save', async function (next) {
     if (!this.isModified('password')) {
-        next();
+        return next();
     }
-    this.password = await bcrypt.hash(this.password, 10)
-    next()
-})
+    this.password = await bcrypt.hash(this.password, 10);
+    next();
+});
 
-//compare pass
+// Compare password method
 userSchema.methods.comparePassword = async function (enteredPassword: string): Promise<boolean> {
-    return await bcrypt.compare(enteredPassword, this.password)
-}
+    return await bcrypt.compare(enteredPassword, this.password);
+};
 
-const userModel: Model<IUser> = mongoose.model("User", userSchema)
+const userModel: Model<IUser> = mongoose.model<IUser>("User", userSchema);
 
 export default userModel;
