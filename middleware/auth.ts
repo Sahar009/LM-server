@@ -35,7 +35,7 @@ export const isAuthenticated = CatchAsyncError(async (req: Request, res: Respons
             return next(new ErrorHandler("Please login to access this resource", 400));
         }
 
-        // req.user = JSON.parse(user)
+        req.user = JSON.parse(user)
 
         next()
     }
