@@ -8,9 +8,11 @@ import express,{Request,Response,NextFunction,Errback} from "express";
 export const app = express()
 import cors from 'cors'
 import cookieParser from "cookie-parser"
-import { ErrorMiddleware } from "./middleware/error";
+import { ErrorMidleware } from "./middleware/error";
 import userRouter from "./routes/user.route";
 import ErrorHandler from "./utils/ErrorHandler";
+import { rateLimit } from "express-rate-limit";
+
 
 // body parser
 app.use(express.json({limit:"50mb"}))
@@ -50,9 +52,9 @@ app.all("*", (req: Request, res: Response, next: NextFunction) => {
 
 
 
-app.use(ErrorMiddleware);
+app.use(ErrorMidleware);
 
-Sentry.setupExpressErrorHandler(app);
+// Sentry.setupExpressErrorHandler(app);
 
 // app.use(function onError(err:Errback, req:Request, res:Response, next:NextFunction) {
 //     // The error id is attached to `res.sentry` to be returned
