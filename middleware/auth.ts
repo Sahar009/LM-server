@@ -3,7 +3,7 @@ import { CatchAsyncError } from "./catchAsyncErrors"
 import ErrorHandler from "../utils/ErrorHandler"
 import jwt, { JwtPayload } from "jsonwebtoken"
 import { redis } from "../utils/redis"
-// import { updateAccessToken } from "../controllers/user.controller"
+import { updateAccessToken } from "../controllers/user.controller"
 
 // authenticated user
 export const isAuthenticated = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
@@ -43,11 +43,13 @@ export const isAuthenticated = CatchAsyncError(async (req: Request, res: Respons
 })
 
 // validate user role
-// export const authorizeRoles = (...roles: string[]) => {
-//     return (req: Request, res: Response, next: NextFunction) => {
-//         if (!roles.includes(req.user?.role || '')) {
-//             return next(new ErrorHandler(`Role: ${req.user?.role} is not allowed to access this resource`, 403))
-//         }
-//         next()
-//     }
-// }
+export const authorizeRoles = (...roles: string[]) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        if (!roles.includes(req.user?.role || '')) {
+            return next(new ErrorHandler(`Role: ${req.user?.role} is not allowed to access this resource`, 403))
+        }
+        next()
+    }
+}
+
+
