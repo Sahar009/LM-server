@@ -12,6 +12,7 @@ import { ErrorMidleware } from "./middleware/error";
 import userRouter from "./routes/user.route";
 import ErrorHandler from "./utils/ErrorHandler";
 import { rateLimit } from "express-rate-limit";
+import courseRouter from "./routes/course.route";
 
 
 // body parser
@@ -32,7 +33,8 @@ app.use((err: ErrorHandler, req: Request, res: Response, next: NextFunction) => 
 });
 // routes middleware
 
-app.use("/api/v1",userRouter)
+app.use("/api/v1",userRouter, courseRouter,)
+
 
 app.get('/test',(req:Request,res:Response,next:NextFunction) =>{
 res.status(200).json({
