@@ -13,6 +13,9 @@ import userRouter from "./routes/user.route";
 import ErrorHandler from "./utils/ErrorHandler";
 import { rateLimit } from "express-rate-limit";
 import courseRouter from "./routes/course.route";
+import orderRouter from "./routes/order.route";
+import notificationRoute from "./routes/notification.route";
+import analyticsRouter from "./routes/analytics.route";
 
 
 // body parser
@@ -33,7 +36,7 @@ app.use((err: ErrorHandler, req: Request, res: Response, next: NextFunction) => 
 });
 // routes middleware
 
-app.use("/api/v1",userRouter, courseRouter,)
+app.use("/api/v1",userRouter, courseRouter,orderRouter,notificationRoute,analyticsRouter,)
 
 
 app.get('/test',(req:Request,res:Response,next:NextFunction) =>{

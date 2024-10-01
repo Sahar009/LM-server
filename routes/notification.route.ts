@@ -1,6 +1,6 @@
 import express from "express"
 import { authorizeRoles, isAuthenticated } from "../middleware/auth"
-import { getNotifications  } from "../controllers/notificatioin.controller"
+import { getNotifications, updateNotification  } from "../controllers/notification.controller"
 // updateNotification
 import { updateAccessToken } from "../controllers/user.controller"
 
