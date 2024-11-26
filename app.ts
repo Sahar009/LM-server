@@ -16,6 +16,7 @@ import courseRouter from "./routes/course.route";
 import orderRouter from "./routes/order.route";
 import notificationRoute from "./routes/notification.route";
 import analyticsRouter from "./routes/analytics.route";
+import layoutRouter from "./routes/layout.route";
 
 
 // body parser
@@ -25,8 +26,20 @@ app.use(express.urlencoded({extended:false}))
 // cookieparser
 app.use(cookieParser())
 // cors
+const allowedOrigins = [process.env.ORIGIN];  
+// app.use(cors({ origin: allowedOrigins }));
+app.use(cors())
+// {origin:'http://localhost:3000'}
+// process.env.ORIGIN
 
-app.use(cors({origin:process.env.ORIGIN}))
+// api request limit
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: "draft-7",
+    legacyHeaders: false,
+  });
+
 app.use((err: ErrorHandler, req: Request, res: Response, next: NextFunction) => {
     err.statusCode = err.statusCode || 500;
     res.status(err.statusCode as any).json({
@@ -36,7 +49,7 @@ app.use((err: ErrorHandler, req: Request, res: Response, next: NextFunction) => 
 });
 // routes middleware
 
-app.use("/api/v1",userRouter, courseRouter,orderRouter,notificationRoute,analyticsRouter,)
+app.use("/api/v1",userRouter, courseRouter,orderRouter,notificationRoute,analyticsRouter, layoutRouter)
 
 
 app.get('/test',(req:Request,res:Response,next:NextFunction) =>{
@@ -54,7 +67,8 @@ app.all("*", (req: Request, res: Response, next: NextFunction) => {
     next(err);
   });
   
-
+// midleware call
+app.use(limiter);
 
 
 app.use(ErrorMidleware);

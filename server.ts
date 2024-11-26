@@ -1,10 +1,13 @@
 import { app } from "./app";
 import * as dotenv from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
-
+import { initSocketServer } from "./socketServer";
+import http from "http";
 import connectDB from './utils/DB'
 dotenv.config();
+const server = http.createServer(app);
 
+initSocketServer(server);
 
 app.listen(process.env.PORT, () => {
   console.log(`SERVER IS CONNECTED TO ${process.env.PORT}`);
