@@ -19,6 +19,6 @@
     "noImplicitReturns": true, // Warns if a function has code paths without a return.
     "noFallthroughCasesInSwitch": true // Warns about fallthrough in switch cases.
   },
-  "include": ["src/**/*.ts"], // Specifies what files to compile.
-  "exclude": ["node_modules", "dist", "test"] // Excludes unnecessary directories.
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }
