@@ -4,7 +4,7 @@ import userModel, { IUser } from '../models/user.model'
 import { CatchAsyncError } from '../middleware/catchAsyncErrors'
 import ErrorHandler from '../utils/ErrorHandler';
 import jwt, { JwtPayload, Secret } from "jsonwebtoken"
-import ejs from "ejs"
+import ejs, { Options } from 'ejs';
 import path from 'path';
 import sendMail from '../utils/sendMail';
 import { accessTokenOptions, refreshTokenOptions, sendToken } from '../utils/jwt';
