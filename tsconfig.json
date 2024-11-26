@@ -8,7 +8,7 @@
     "forceConsistentCasingInFileNames": true, // Enforces consistent casing in file imports.
     "resolveJsonModule": true, // Allows importing JSON files as modules.
     "outDir": "./dist", // Specifies output directory for compiled files.
-    "rootDir": "./src", // Specifies the root directory of TypeScript source files.
+    "rootDir": "./", // Specifies the root directory of TypeScript source files.
     "strictNullChecks": true, // Helps prevent null/undefined errors.
     "noImplicitAny": true, // Warns if a type is implicitly `any`.
     "moduleResolution": "node", // Ensures module resolution aligns with Node.js.
