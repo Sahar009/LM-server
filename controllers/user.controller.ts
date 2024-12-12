@@ -223,8 +223,8 @@ export const updateAccessToken = CatchAsyncError(async (req: Request, res: Respo
 export const getUserInfo = CatchAsyncError(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const userId = req.user?._id || "";  
-        getUserById(userId, res)
+            const userId = req.user?._id as string; 
+            getUserById(userId, res);
         } catch (error: any) {
             return next(new ErrorHandler(error.message, 400))
         }
@@ -411,7 +411,7 @@ export const updateUserRole = CatchAsyncError(
             const { email, role } = req.body
             const isUserExits = await userModel.findOne({ email })
             if (isUserExits) {
-                const id = isUserExits._id
+                const id = isUserExits._id as string;
                 updatetUserRoleService(res, id, role)
             } else {
                 res.status(400).json({
