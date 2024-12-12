@@ -1,4 +1,3 @@
-require("./instrument.js");
 require('dotenv').config()
 
 
