@@ -17,6 +17,7 @@ import axios from "axios";
  */
 export const uploadCourse = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.body); 
     try {
       const data = req.body;
       const thumbnail = data.thumbnail;
@@ -307,7 +308,7 @@ export const addAnswer = CatchAsyncError(
             email: question.user.email,
             subject: "Question Reply",
             template: "question-reply.ejs",
-            data,
+            data: { html },
           });
         } catch (error: any) {
           return next(new ErrorHandler(error.message, 500));
@@ -455,6 +456,7 @@ export const getAdminCourses = CatchAsyncError(
 // delete course-- only for admin
 export const deleteCourse = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.body); 
     try {
       const { id } = req.body;
 

@@ -1,9 +1,8 @@
 require("./instrument.js");
 require('dotenv').config()
 
-const Sentry = require("@sentry/node");
 
-import express,{Request,Response,NextFunction,Errback} from "express";
+import express,{Request,Response,NextFunction} from "express";
 
 export const app = express()
 import cors from 'cors'
@@ -26,7 +25,7 @@ app.use(express.urlencoded({extended:false}))
 // cookieparser
 app.use(cookieParser())
 // cors
-const allowedOrigins = [process.env.ORIGIN];  
+// const allowedOrigins = [process.env.ORIGIN];  
 // app.use(cors({ origin: allowedOrigins }));
 app.use(cors())
 // {origin:'http://localhost:3000'}
@@ -41,32 +40,38 @@ const limiter = rateLimit({
   });
 
 app.use((err: ErrorHandler, req: Request, res: Response, next: NextFunction) => {
+  console.log(req.body);
     err.statusCode = err.statusCode || 500;
     res.status(err.statusCode as any).json({
         success: false,
         message: err.message,
     });
+    next(err); 
 });
 // routes middleware
 
 app.use("/api/v1",userRouter, courseRouter,orderRouter,notificationRoute,analyticsRouter, layoutRouter)
 
 
-app.get('/test',(req:Request,res:Response,next:NextFunction) =>{
-res.status(200).json({
-    success:true,
-    message:"Api de function well"
-})
-})
+app.get('/test', (req: Request, res: Response, next: NextFunction) => {
+  console.log(req.query); 
+  res.status(200).json({
+      success: true,
+      message: "Api de function well"
+  });
+  next();
+});
 
 
 
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
-    const err = new Error(`Router ${req.originalUrl} not found`) as any;
-    err.statusCode = 404;
-    next(err);
-  });
-  
+  const err = new Error(`Router ${req.originalUrl} not found`) as any;
+  err.statusCode = 404;
+  res.status(err.statusCode).json({ message: err.message });
+  next(err);
+});
+
+
 // midleware call
 app.use(limiter);
 

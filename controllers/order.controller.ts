@@ -96,6 +96,7 @@ export const createOrder = CatchAsyncError(
                     subject: "Order Confirmation",
                     template: "order-confirmation.ejs",
                     data: mailData,
+                    html
                 });
             } catch (error: any) {
                 return next(new ErrorHandler(error.message, 500));
@@ -126,6 +127,8 @@ export const createOrder = CatchAsyncError(
 // get all orders --- only for admin
 export const getAllOrders = CatchAsyncError(
     async (req: Request, res: Response, next: NextFunction) => {
+        // Example usage of req
+        console.log(req.user); // Log the user or any relevant info
         try {
             getAllOrdersService(res);
         } catch (error: any) {
@@ -146,6 +149,8 @@ export const sendStripePublshableKey = CatchAsyncError(
 //ney payment
 export const newPayment = CatchAsyncError(
     async (req: Request, res: Response, next: NextFunction) => {
+        // Example usage of req
+        console.log(req.body); // Log the request body
         try {
             const myPayment = await stripe.paymentIntents.create({
                 amount: req.body.amount,

@@ -4,9 +4,11 @@ import ErrorHandler from "../utils/ErrorHandler"
 import jwt, { JwtPayload } from "jsonwebtoken"
 import { redis } from "../utils/redis"
 import { updateAccessToken } from "../controllers/user.controller"
+// import { updateAccessToken } from "../controllers/user.controller"
 
 // authenticated user
 export const isAuthenticated = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    console.log(res); 
     const access_token = req.cookies.access_token as string;
 
     // console.log(access_token)
@@ -23,7 +25,7 @@ export const isAuthenticated = CatchAsyncError(async (req: Request, res: Respons
     // check if the access token is expired
     if (decoded.exp && decoded.exp <= Date.now() / 1000) {
         try {
-            // await updateAccessToken(req, res, next)
+            await updateAccessToken(req, res, next)
         } catch (error: any) {
             new ErrorHandler("Please login to acces this resource", 400)
         }

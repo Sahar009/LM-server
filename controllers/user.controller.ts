@@ -4,7 +4,7 @@ import userModel, { IUser } from '../models/user.model'
 import { CatchAsyncError } from '../middleware/catchAsyncErrors'
 import ErrorHandler from '../utils/ErrorHandler';
 import jwt, { JwtPayload, Secret } from "jsonwebtoken"
-import ejs, { Options } from 'ejs';
+import ejs from 'ejs';
 import path from 'path';
 import sendMail from '../utils/sendMail';
 import { accessTokenOptions, refreshTokenOptions, sendToken } from '../utils/jwt';
@@ -45,6 +45,7 @@ export const registrationUser = CatchAsyncError(async (req: Request, res: Respon
             subject: "Activate your account",
             template: "activation-mail.ejs",
             data,
+            html 
         });
 
         res.status(201).json({
@@ -68,10 +69,9 @@ export const createActivationToken = (user: any): IActivationToken => {
 
     const token = jwt.sign({
         user, activationCode
-    }, process.env.ACTIVATION_SECRET as Secret, {
+    }, process.env.ACTIVATION_SECRET || "824023852093" as Secret, {
         expiresIn: "5m"
-    })
-
+    });
     return { token, activationCode }
 }
 
@@ -104,7 +104,7 @@ export const activateUser = CatchAsyncError(async (req: Request, res: Response, 
             return next(new ErrorHandler("Email already exist", 400))
         }
 
-        const user = await userModel.create({
+        await userModel.create({
             name, email, password
         })
 
@@ -159,7 +159,7 @@ export const logoutUser = CatchAsyncError(async (req: Request, res: Response, ne
         res.cookie("refresh_token", "", { maxAge: 1 })
 
         const userId = req.user?._id || ""
-        redis.del(userId)
+        await redis.del(userId as string);
 
         res.status(200).json({
             success: true,
@@ -177,7 +177,9 @@ export const logoutUser = CatchAsyncError(async (req: Request, res: Response, ne
  * update access token
  */
 export const updateAccessToken = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    console.log(res); 
     try {
+        
         const refresh_token = req.cookies.refresh_token as string;
         const decoded = jwt.verify(refresh_token,
             process.env.REFRESH_TOKEN as string) as JwtPayload
@@ -288,8 +290,7 @@ export const updateUserInfo = CatchAsyncError(
 
             await user?.save();
 
-            await redis.set(userId, JSON.stringify(user));
-
+            await redis.set(userId as string, JSON.stringify(user));
             res.status(201).json({
                 success: true,
                 user
@@ -351,6 +352,7 @@ export const updatePassword = CatchAsyncError(
  */
 export const updateProfilePicture = CatchAsyncError(
     async (req: Request, res: Response, next: NextFunction) => {
+        console.log(req.body);
         try {
             const { avatar } = req.body
 
@@ -384,8 +386,7 @@ export const updateProfilePicture = CatchAsyncError(
 
             await user?.save()
 
-            await redis.set(userId, JSON.stringify(user))
-
+            await redis.set(userId as string, JSON.stringify(user));
             res.status(201).json({
                 success: true,
                 user
@@ -442,7 +443,11 @@ export const deleteUser = CatchAsyncError(
 
             await user.deleteOne({ id })
 
-            await redis.del(id)
+            if (id) {
+                await redis.del(id);
+            } else {
+                return next(new ErrorHandler("ID is required", 400));
+            }
 
             res.status(201).json({
                 success: true,
