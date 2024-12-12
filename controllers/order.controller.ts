@@ -35,7 +35,6 @@ export const createOrder = CatchAsyncError(
     async (_req: Request, res: Response, next: NextFunction) => {
         try {
             const { courseId, payment_info } = _req.body as IOrder;
-
             if (payment_info) {
                 if ("id" in payment_info) {
                     const paymentIntentId = payment_info.id;
@@ -63,11 +62,11 @@ export const createOrder = CatchAsyncError(
                 return next(new ErrorHandler("Course not found", 404));
             }
 
-            const data = {
-                courseId: course._id,
-                userId: user._id,
-                payment_info,
-            };
+            // const data = {
+            //     courseId: course._id,
+            //     userId: user._id,
+            //     payment_info,
+            // };
 
             const mailData = {
                 order: {
@@ -112,7 +111,11 @@ export const createOrder = CatchAsyncError(
             course.purchased += 1;
             await course.save();
 
-            await newOrder(data, res, next); // Pass data, res, and next
+            await newOrder({ 
+                courseId: course._id, 
+                userId: user._id, 
+                payment_info 
+            }, res, next); 
         } catch (error: any) {
             return next(new ErrorHandler(error.message, 500));
         }
