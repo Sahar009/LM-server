@@ -30,17 +30,16 @@ interface IUser {
 }
 
 // create order
+// create order
 export const createOrder = CatchAsyncError(
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (_req: Request, res: Response, next: NextFunction) => {
         try {
-            const { courseId, payment_info } = req.body as IOrder;
+            const { courseId, payment_info } = _req.body as IOrder;
 
             if (payment_info) {
                 if ("id" in payment_info) {
                     const paymentIntentId = payment_info.id;
-                    const paymentIntent = await stripe.paymentIntents.retrieve(
-                        paymentIntentId
-                    );
+                    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
                     if (paymentIntent.status !== "succeeded") {
                         return next(new ErrorHandler("Payment not authorized!", 400));
@@ -48,16 +47,14 @@ export const createOrder = CatchAsyncError(
                 }
             }
 
-            const user = await userModel.findById(req.user?._id) as IUser;
+            const user = await userModel.findById(_req.user?._id) as IUser;
 
             const courseExistsInUser = user?.courses.some(
                 (course: any) => course.toString() === courseId
             );
 
             if (courseExistsInUser) {
-                return next(
-                    new ErrorHandler("You have already purchased this course", 400)
-                );
+                return next(new ErrorHandler("You have already purchased this course", 400));
             }
 
             const course = await CourseModel.findById(courseId) as ICourse;
@@ -103,9 +100,7 @@ export const createOrder = CatchAsyncError(
             }
 
             user.courses.push(course._id);
-
             await redis.set(user._id.toString(), JSON.stringify(user));
-
             await user.save();
 
             await NotificationModel.create({
@@ -117,12 +112,13 @@ export const createOrder = CatchAsyncError(
             course.purchased += 1;
             await course.save();
 
-            newOrder(data, res, next);
+            await newOrder(data, res, next); // Pass data, res, and next
         } catch (error: any) {
             return next(new ErrorHandler(error.message, 500));
         }
     }
 );
+
 
 // get all orders --- only for admin
 export const getAllOrders = CatchAsyncError(
