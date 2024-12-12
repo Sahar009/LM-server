@@ -43,93 +43,78 @@ interface IOrderData {
 
 export const createOrder = CatchAsyncError(
     async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const { courseId, payment_info } = req.body as IOrder;
+        const { courseId, payment_info } = req.body as IOrder;
 
-            if (payment_info) {
-                if ("id" in payment_info) {
-                    const paymentIntentId = payment_info.id;
-                    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-
-                    if (paymentIntent.status !== "succeeded") {
-                        return next(new ErrorHandler("Payment not authorized!", 400));
-                    }
-                }
+        // Validate payment
+        if (payment_info?.id) {
+            const paymentIntent = await stripe.paymentIntents.retrieve(payment_info.id);
+            if (paymentIntent.status !== "succeeded") {
+                return next(new ErrorHandler("Payment not authorized!", 400));
             }
-
-            const user = await userModel.findById(req.user?._id);
-            if (!user) {
-                return next(new ErrorHandler("User not found", 404));
-            }
-
-            const courseExistsInUser = user.courses.some(
-                (course: any) => course.toString() === courseId
-            );
-
-            if (courseExistsInUser) {
-                return next(new ErrorHandler("You have already purchased this course", 400));
-            }
-
-            const course = await CourseModel.findById(courseId);
-            if (!course) {
-                return next(new ErrorHandler("Course not found", 404));
-            }
-
-            const mailData = {
-                order: {
-                    _id: course._id.toString().slice(0, 6),
-                    name: course.name,
-                    price: course.price,
-                    date: new Date().toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                    }),
-                },
-            };
-
-            const html = await ejs.renderFile(
-                path.join(__dirname, "../mails/order-confirmation.ejs"),
-                { order: mailData }
-            );
-
-            try {
-                await sendMail({
-                    email: user.email,
-                    subject: "Order Confirmation",
-                    template: "order-confirmation.ejs",
-                    data: mailData,
-                    html
-                });
-            } catch (error: any) {
-                return next(new ErrorHandler(error.message, 500));
-            }
-
-            user.courses.push(course._id);
-            await redis.set(user._id.toString(), JSON.stringify(user));
-            await user.save();
-
-            await NotificationModel.create({
-                user: user._id,
-                title: "New Order",
-                message: `You have a new order from ${course.name}`,
-            });
-
-            course.purchased += 1;
-            await course.save();
-
-            const orderData: IOrderData = { 
-                courseId: course._id.toString(), 
-                userId: user._id.toString(), 
-                payment_info 
-            };
-
-            await newOrder(data, res, next); 
-             } catch (error: any) {
-            return next(new ErrorHandler(error.message, 500));
         }
+
+        // Fetch user
+        const user = await userModel.findById(req.user?._id);
+        if (!user) return next(new ErrorHandler("User not found", 404));
+
+        // Check if user already owns the course
+        if (user.courses.some((course: any) => course.toString() === courseId)) {
+            return next(new ErrorHandler("You have already purchased this course", 400));
+        }
+
+        // Fetch course
+        const course = await CourseModel.findById(courseId);
+        if (!course) return next(new ErrorHandler("Course not found", 404));
+
+        // Send confirmation email
+        const mailData = {
+            order: {
+                _id: course._id.toString().slice(0, 6),
+                name: course.name,
+                price: course.price,
+                date: new Date().toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                }),
+            },
+        };
+        const html = await ejs.renderFile(
+            path.join(__dirname, "../mails/order-confirmation.ejs"),
+            { order: mailData }
+        );
+        await sendMail({
+            email: user.email,
+            subject: "Order Confirmation",
+            template: "order-confirmation.ejs",
+            data: mailData,
+            html,
+        });
+
+        // Update user and course
+        user.courses.push(course._id);
+        await redis.set(user._id.toString(), JSON.stringify(user));
+        await user.save();
+
+        await NotificationModel.create({
+            user: user._id,
+            title: "New Order",
+            message: `You have a new order from ${course.name}`,
+        });
+
+        course.purchased += 1;
+        await course.save();
+
+        // Create the order
+        const orderData: IOrderData = {
+            courseId: course._id.toString(),
+            userId: user._id.toString(),
+            payment_info,
+        };
+        await newOrder(orderData, res, next);
     }
 );
+
 
 
 // get all orders --- only for admin
