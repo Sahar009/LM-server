@@ -39,7 +39,8 @@ interface IUser {
 
 // Create Order
 export const createOrder = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-    const { courseId, payment_info } = req.body;
+    const { courseId, payment_info } = req.body as { courseId: string; payment_info: any };
+
 
     if (!courseId) {
         return next(new ErrorHandler("Course ID is required", 400));
@@ -86,13 +87,8 @@ export const createOrder = CatchAsyncError(async (req: Request, res: Response, n
     { order: mailData }
   );
 
-  await sendMail({
-    email: user.email,
-    subject: "Order Confirmation",
-    template: "order-confirmation.ejs",
-    data: mailData,
-    html,
-  });
+  await sendMail({ email: user.email, subject: "Order Confirmation", template: "order-confirmation.ejs", data: mailData, html });
+
 
   user.courses.push(course._id);
   await redis.set(user._id.toString(), JSON.stringify(user));
