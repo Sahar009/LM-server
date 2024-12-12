@@ -6,7 +6,7 @@ import http from "http";
 import connectDB from './utils/DB'
 dotenv.config();
 const server = http.createServer(app);
-
+const PORT = process.env.PORT || 10000;
 initSocketServer(server);
 
 app.listen(process.env.PORT, () => {
