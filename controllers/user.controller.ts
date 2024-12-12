@@ -69,7 +69,7 @@ export const createActivationToken = (user: any): IActivationToken => {
 
     const token = jwt.sign({
         user, activationCode
-    }, process.env.ACTIVATION_SECRET || "824023852093" as Secret, {
+    }, process.env.ACTIVATION_SECRET as Secret, {
         expiresIn: "5m"
     });
     return { token, activationCode }
@@ -209,8 +209,7 @@ export const updateAccessToken = CatchAsyncError(async (req: Request, res: Respo
         res.cookie("access_token", accessToken, accessTokenOptions)
         res.cookie("refresh_token", refreshToken, refreshTokenOptions)
 
-        await redis.set(user._id, JSON.stringify(user), "EX", 604800)//7 days expiration
-
+        await redis.set(user._id as string, JSON.stringify(user), "EX", 604800)//7 days expiration
         next()
 
     } catch (error: any) {
@@ -335,8 +334,7 @@ export const updatePassword = CatchAsyncError(
 
             await user?.save();
 
-            await redis.set(userId, JSON.stringify(user));
-
+await redis.set(userId as string, JSON.stringify(user));
             res.status(201).json({
                 success: true,
                 user
