@@ -118,47 +118,47 @@ interface IUser {
 
 
 // get all orders --- only for admin
-export const getAllOrders = CatchAsyncError(async (req: Request, res: Response) => {
-    const orders = await getAllOrdersService();
+// export const getAllOrders = CatchAsyncError(async (req: Request, res: Response) => {
+//     const orders = await getAllOrdersService();
   
-    res.status(200).json({
-      success: true,
-      orders,
-    });
-  });
+//     res.status(200).json({
+//       success: true,
+//       orders,
+//     });
+//   });
 
 // sent stripe publishie key
-export const sendStripePublshableKey = CatchAsyncError(
-    async (req: Request, res: Response) => {
-        res.status(200).json({
-            publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
-        });
-    }
-);
+// export const sendStripePublshableKey = CatchAsyncError(
+//     async (req: Request, res: Response) => {
+//         res.status(200).json({
+//             publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+//         });
+//     }
+// );
 
 //ney payment
-export const newPayment = CatchAsyncError(
-    async (req: Request, res: Response, next: NextFunction) => {
-        // Example usage of req
-        console.log(req.body); // Log the request body
-        try {
-            const myPayment = await stripe.paymentIntents.create({
-                amount: req.body.amount,
-                currency: "USD",
-                metadata: {
-                    company: "E-Learning",
-                },
-                automatic_payment_methods: {
-                    enabled: true,
-                },
-            });
+// export const newPayment = CatchAsyncError(
+//     async (req: Request, res: Response, next: NextFunction) => {
+//         // Example usage of req
+//         console.log(req.body); // Log the request body
+//         try {
+//             const myPayment = await stripe.paymentIntents.create({
+//                 amount: req.body.amount,
+//                 currency: "USD",
+//                 metadata: {
+//                     company: "E-Learning",
+//                 },
+//                 automatic_payment_methods: {
+//                     enabled: true,
+//                 },
+//             });
 
-            res.status(200).json({
-                success: true,
-                client_secret: myPayment.client_secret,
-            });
-        } catch (error: any) {
-            return next(new ErrorHandler(error.message, 500));
-        }
-    }
-);
+//             res.status(200).json({
+//                 success: true,
+//                 client_secret: myPayment.client_secret,
+//             });
+//         } catch (error: any) {
+//             return next(new ErrorHandler(error.message, 500));
+//         }
+//     }
+// );
