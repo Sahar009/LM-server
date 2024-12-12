@@ -8,7 +8,7 @@ import CourseModel from "../models/course.model";
 
 // get user analytics -- only for admin
 export const getUserAnalytics = CatchAsyncError(
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (_req: Request, res: Response, next: NextFunction) => {
         try {
             const users = await generateLast12MonthsDate(userModel);
 

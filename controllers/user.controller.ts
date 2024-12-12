@@ -209,8 +209,7 @@ export const updateAccessToken = CatchAsyncError(async (req: Request, res: Respo
         res.cookie("access_token", accessToken, accessTokenOptions)
         res.cookie("refresh_token", refreshToken, refreshTokenOptions)
 
-        await redis.set(user._id as string, JSON.stringify(user), "EX", 604800)//7 days expiration
-        next()
+        await redis.set(String(user._Id), JSON.stringify(user));        next()
 
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 400))
@@ -224,8 +223,8 @@ export const updateAccessToken = CatchAsyncError(async (req: Request, res: Respo
 export const getUserInfo = CatchAsyncError(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const userId = req.user?._id
-            getUserById(userId, res)
+            const userId = req.user?._id || "";  
+        getUserById(userId, res)
         } catch (error: any) {
             return next(new ErrorHandler(error.message, 400))
         }
@@ -272,8 +271,7 @@ export const updateUserInfo = CatchAsyncError(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { name, email } = req.body as IUpdateUserInfo; // Ensure email is destructured
-            const userId = req.user?._id;
-            const user = await userModel.findById(userId);
+            const userId = req.user?._id || "";            const user = await userModel.findById(userId);
 
             if (email && user) { // Check if email is defined
                 const isEmailExist = await userModel.findOne({ email });
@@ -289,7 +287,7 @@ export const updateUserInfo = CatchAsyncError(
 
             await user?.save();
 
-            await redis.set(userId as string, JSON.stringify(user));
+            await redis.set(String(userId), JSON.stringify(user));
             res.status(201).json({
                 success: true,
                 user
@@ -317,8 +315,8 @@ export const updatePassword = CatchAsyncError(
                 return next(new ErrorHandler("Please enter old and new password", 400));
             }
 
-            const userId = req.user?._id;
-            const user = await userModel.findById(userId).select("+password");
+            const userId = req.user?._id || "";
+                        const user = await userModel.findById(userId).select("+password");
 
             if (!user) { // Check if user exists
                 return next(new ErrorHandler("Invalid user", 400));
@@ -334,7 +332,7 @@ export const updatePassword = CatchAsyncError(
 
             await user?.save();
 
-await redis.set(userId as string, JSON.stringify(user));
+await redis.set(String(userId), JSON.stringify(user));
             res.status(201).json({
                 success: true,
                 user
@@ -354,8 +352,8 @@ export const updateProfilePicture = CatchAsyncError(
         try {
             const { avatar } = req.body
 
-            const userId = req.user?._id
-            const user = await userModel.findById(userId)
+            const userId = req.user?._id || "";
+                        const user = await userModel.findById(userId)
 
             if (avatar && user) {
                 // if user have one avatar then call this if
@@ -384,7 +382,7 @@ export const updateProfilePicture = CatchAsyncError(
 
             await user?.save()
 
-            await redis.set(userId as string, JSON.stringify(user));
+            await redis.set(String(userId), JSON.stringify(user));
             res.status(201).json({
                 success: true,
                 user
