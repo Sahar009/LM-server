@@ -17,8 +17,8 @@ import cloudinary from "cloudinary"
  * register user
  */
 interface IRegistrationBody {
-    name: string;
-    email: string;
+    name?: string;
+    email?: string;
     password: string;
     avatar?: string;
 }
@@ -270,35 +270,35 @@ interface IUpdateUserInfo {
 export const updateUserInfo = CatchAsyncError(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { name } = req.body as IUpdateUserInfo
-            const userId = req.user?._id
-            const user = await userModel.findById(userId)
+            const { name, email } = req.body as IUpdateUserInfo; // Ensure email is destructured
+            const userId = req.user?._id;
+            const user = await userModel.findById(userId);
 
-            if (email && user) {
-                const isEmailExist = await userModel.findOne({ email })
+            if (email && user) { // Check if email is defined
+                const isEmailExist = await userModel.findOne({ email });
                 if (isEmailExist) {
-                    return next(new ErrorHandler("Email already exist", 400))
+                    return next(new ErrorHandler("Email already exist", 400));
                 }
-                user.email = email
+                user.email = email; // Assign email to user
             }
 
             if (name && user) {
-                user.name = name
+                user.name = name;
             }
 
-            await user?.save()
+            await user?.save();
 
-            await redis.set(userId, JSON.stringify(user))
+            await redis.set(userId, JSON.stringify(user));
 
             res.status(201).json({
                 success: true,
                 user
-            })
+            });
         } catch (error: any) {
-            return next(new ErrorHandler(error.message, 400))
+            return next(new ErrorHandler(error.message, 400));
         }
     }
-)
+);
 
 /**
  * update user passowrd
@@ -311,40 +311,40 @@ interface IUpdatePassword {
 export const updatePassword = CatchAsyncError(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { oldPassword, newPassword } = req.body as IUpdatePassword
+            const { oldPassword, newPassword } = req.body as IUpdatePassword;
 
             if (!oldPassword || !newPassword) {
-                return next(new ErrorHandler("Please enter old and new password", 400))
+                return next(new ErrorHandler("Please enter old and new password", 400));
             }
 
-            const userId = req.user?._id
-            const user = await userModel.findById(userId).select("+password")
+            const userId = req.user?._id;
+            const user = await userModel.findById(userId).select("+password");
 
-            if (user?.password == undefined) {
-                return next(new ErrorHandler("Invalid user", 400))
+            if (!user) { // Check if user exists
+                return next(new ErrorHandler("Invalid user", 400));
             }
 
-            const isPasswordMatch = await user?.comparePassword(oldPassword)
+            const isPasswordMatch = await user.comparePassword(oldPassword);
 
             if (!isPasswordMatch) {
-                return next(new ErrorHandler("Invalid old password", 400))
+                return next(new ErrorHandler("Invalid old password", 400));
             }
 
-            user.password = newPassword
+            user.password = newPassword;
 
-            await user?.save()
+            await user?.save();
 
-            await redis.set(req.user?._id, JSON.stringify(user))
+            await redis.set(userId, JSON.stringify(user));
 
             res.status(201).json({
                 success: true,
                 user
-            })
+            });
         } catch (error: any) {
-            return next(new ErrorHandler(error.message, 400))
+            return next(new ErrorHandler(error.message, 400));
         }
     }
-)
+);
 
 /**
  * update profile picture
