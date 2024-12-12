@@ -28,13 +28,24 @@ interface IUser {
     courses: string[];
     save: () => Promise<IUser>;
 }
+interface IOrderData {
+    courseId: string;
+    userId: string;
+    payment_info: any; 
+}
 
 // create order
-// create order
+// interface IOrderData {
+//     courseId: string;
+//     userId: string;
+//     payment_info: any;
+// }
+
 export const createOrder = CatchAsyncError(
-    async (_req: Request, res: Response, next: NextFunction) => {
+    async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { courseId, payment_info } = _req.body as IOrder;
+            const { courseId, payment_info } = req.body as IOrder;
+
             if (payment_info) {
                 if ("id" in payment_info) {
                     const paymentIntentId = payment_info.id;
@@ -46,9 +57,12 @@ export const createOrder = CatchAsyncError(
                 }
             }
 
-            const user = await userModel.findById(_req.user?._id) as IUser;
+            const user = await userModel.findById(req.user?._id);
+            if (!user) {
+                return next(new ErrorHandler("User not found", 404));
+            }
 
-            const courseExistsInUser = user?.courses.some(
+            const courseExistsInUser = user.courses.some(
                 (course: any) => course.toString() === courseId
             );
 
@@ -56,17 +70,10 @@ export const createOrder = CatchAsyncError(
                 return next(new ErrorHandler("You have already purchased this course", 400));
             }
 
-            const course = await CourseModel.findById(courseId) as ICourse;
-
+            const course = await CourseModel.findById(courseId);
             if (!course) {
                 return next(new ErrorHandler("Course not found", 404));
             }
-
-            // const data = {
-            //     courseId: course._id,
-            //     userId: user._id,
-            //     payment_info,
-            // };
 
             const mailData = {
                 order: {
@@ -111,12 +118,14 @@ export const createOrder = CatchAsyncError(
             course.purchased += 1;
             await course.save();
 
-            await newOrder({ 
-                courseId: course._id, 
-                userId: user._id, 
+            const orderData: IOrderData = { 
+                courseId: course._id.toString(), 
+                userId: user._id.toString(), 
                 payment_info 
-            }, res, next); 
-        } catch (error: any) {
+            };
+
+            await newOrder(data, res, next); 
+             } catch (error: any) {
             return next(new ErrorHandler(error.message, 500));
         }
     }
