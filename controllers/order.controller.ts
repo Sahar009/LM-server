@@ -45,29 +45,25 @@ export const createOrder = CatchAsyncError(
     async (req: Request, res: Response, next: NextFunction) => {
         const { courseId, payment_info } = req.body as IOrder;
 
-        // Validate payment
         if (payment_info && typeof payment_info === "object" && "id" in payment_info) {
             const paymentIntentId = (payment_info as { id: string }).id;
             const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
             if (paymentIntent.status !== "succeeded") {
                 return next(new ErrorHandler("Payment not authorized!", 400));
             }
         }
 
-        // Fetch user
         const user = await userModel.findById(req.user?._id);
         if (!user) return next(new ErrorHandler("User not found", 404));
 
-        // Check if user already owns the course
         if (user.courses.some((course: any) => course.toString() === courseId)) {
             return next(new ErrorHandler("You have already purchased this course", 400));
         }
 
-        // Fetch course
         const course = await CourseModel.findById(courseId);
         if (!course) return next(new ErrorHandler("Course not found", 404));
 
-        // Send confirmation email
         const mailData = {
             order: {
                 _id: course._id.toString().slice(0, 6),
@@ -80,10 +76,12 @@ export const createOrder = CatchAsyncError(
                 }),
             },
         };
+
         const html = await ejs.renderFile(
             path.join(__dirname, "../mails/order-confirmation.ejs"),
             { order: mailData }
         );
+
         await sendMail({
             email: user.email,
             subject: "Order Confirmation",
@@ -92,7 +90,6 @@ export const createOrder = CatchAsyncError(
             html,
         });
 
-        // Update user and course
         user.courses.push(course._id);
         await redis.set(user._id.toString(), JSON.stringify(user));
         await user.save();
@@ -100,21 +97,22 @@ export const createOrder = CatchAsyncError(
         await NotificationModel.create({
             user: user._id,
             title: "New Order",
-            message: `You have a new order from ${course.name}`,
+            message: `You have a new order for ${course.name}`,
         });
 
         course.purchased += 1;
         await course.save();
 
-        // Create the order
         const orderData: IOrderData = {
             courseId: course._id.toString(),
             userId: user._id.toString(),
             payment_info,
         };
+
         await newOrder(orderData, res, next);
     }
 );
+
 
 
 
