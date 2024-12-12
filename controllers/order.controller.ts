@@ -38,77 +38,77 @@ interface IUser {
 }
 
 // Create Order
-export const createOrder = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-    const { courseId, payment_info } = req.body as { courseId: string; payment_info: any };
+// export const createOrder = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+//     const { courseId, payment_info } = req.body as { courseId: string; payment_info: any };
 
 
-    if (!courseId) {
-        return next(new ErrorHandler("Course ID is required", 400));
-    }
+//     if (!courseId) {
+//         return next(new ErrorHandler("Course ID is required", 400));
+//     }
 
-    const user = await userModel.findById(req.user?._id);
-    if (!user) {
-        return next(new ErrorHandler("User not found", 404));
-    }
+//     const user = await userModel.findById(req.user?._id);
+//     if (!user) {
+//         return next(new ErrorHandler("User not found", 404));
+//     }
 
-    const course = await CourseModel.findById(courseId);
-    if (!course) {
-        return next(new ErrorHandler("Course not found", 404));
-    }
+//     const course = await CourseModel.findById(courseId);
+//     if (!course) {
+//         return next(new ErrorHandler("Course not found", 404));
+//     }
 
-    if (user.courses.includes(courseId)) {
-        return next(new ErrorHandler("You have already purchased this course", 400));
-    }
+//     if (user.courses.includes(courseId)) {
+//         return next(new ErrorHandler("You have already purchased this course", 400));
+//     }
 
-    if (payment_info && "id" in payment_info) {
-        const paymentIntent = await stripe.paymentIntents.retrieve(payment_info.id);
-        if (paymentIntent.status !== "succeeded") {
-            return next(new ErrorHandler("Payment not authorized!", 400));
-        }
-    }
+//     if (payment_info && "id" in payment_info) {
+//         const paymentIntent = await stripe.paymentIntents.retrieve(payment_info.id);
+//         if (paymentIntent.status !== "succeeded") {
+//             return next(new ErrorHandler("Payment not authorized!", 400));
+//         }
+//     }
   
 
-  // Send confirmation email
-  const mailData = {
-    order: {
-      _id: course._id.toString().slice(0, 6),
-      name: course.name,
-      price: course.price,
-      date: new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-    },
-  };
+//   // Send confirmation email
+//   const mailData = {
+//     order: {
+//       _id: course._id.toString().slice(0, 6),
+//       name: course.name,
+//       price: course.price,
+//       date: new Date().toLocaleDateString("en-US", {
+//         year: "numeric",
+//         month: "long",
+//         day: "numeric",
+//       }),
+//     },
+//   };
 
-  const html = await ejs.renderFile(
-    path.join(__dirname, "../mails/order-confirmation.ejs"),
-    { order: mailData }
-  );
+//   const html = await ejs.renderFile(
+//     path.join(__dirname, "../mails/order-confirmation.ejs"),
+//     { order: mailData }
+//   );
 
-  await sendMail({ email: user.email, subject: "Order Confirmation", template: "order-confirmation.ejs", data: mailData, html });
-
-
-  user.courses.push(course._id);
-  await redis.set(user._id.toString(), JSON.stringify(user));
-  await user.save();
+//   await sendMail({ email: user.email, subject: "Order Confirmation", template: "order-confirmation.ejs", data: mailData, html });
 
 
-  await NotificationModel.create({
-    user: user._id,
-    title: "New Order",
-    message: `You have a new order for ${course.name}`,
-  });
+//   user.courses.push(course._id);
+//   await redis.set(user._id.toString(), JSON.stringify(user));
+//   await user.save();
 
-  course.purchased += 1;
-    await course.save();
 
-    const orderData = { courseId, userId: user._id.toString(), payment_info };
-    const order = await newOrder(orderData);
+//   await NotificationModel.create({
+//     user: user._id,
+//     title: "New Order",
+//     message: `You have a new order for ${course.name}`,
+//   });
 
-    res.status(201).json({ success: true, order });
-});
+//   course.purchased += 1;
+//     await course.save();
+
+//     const orderData = { courseId, userId: user._id.toString(), payment_info };
+//     const order = await newOrder(orderData);
+
+//     res.status(201).json({ success: true, order });
+// });
 
 
 
